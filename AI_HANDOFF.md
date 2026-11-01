@@ -3,7 +3,7 @@
 Read this first. It lets any AI assistant or developer continue the project without the original chat.
 
 ## 1. What this is
-A single-file, mobile-first Habit Tracker PWA (vanilla HTML/CSS/JS, no framework, no build). Built to replace a handwritten notebook tracker (columns = habits, rows = days of the month, X marks, totals row, line graph). Hosted on GitHub Pages. Data lives in `localStorage` (key `ht1`). Logo: user-supplied glossy blue calendar/check/bar-chart icon (`icons/`).
+A single-file, mobile-first Habit Tracker PWA (vanilla HTML/CSS/JS, no framework, no build). Built to replace a handwritten notebook tracker (columns = habits, rows = days of the month, X marks, totals row, line graph). Hosted on GitHub Pages. Data lives in `localStorage` (key `ht1`). Test-data seeding and the Settings "Test data" section were removed from the final build. Logo: user-supplied glossy blue calendar/check/bar-chart icon (`icons/`).
 
 Status: working trial, tested on Chromium at 390x844. NOT yet verified on real iPhone Safari, and the real PDF/Excel output files have not been inspected (see section 8).
 
@@ -14,7 +14,8 @@ Status: working trial, tested on Chromium at 390x844. NOT yet verified on real i
 4. Round 3: menu should show a "Months" button that expands history; streaks limited to the month (no carry-over) and change the fire icon; frozen header row (habit names) and Day column in the monthly report; report header shows max 20 characters of a habit name so row height stays fixed; backup/restore as a file instead of copy-paste; remove Habits tab from bottom bar (moved to menu).
 5. Round 4: user asked PDF vs Excel opinion; recommendation was PDF as primary (fixed record, graphs reliable) with Excel as optional data export; user chose to offer both after tapping "Download report".
 6. Round 5: user asked for testing (UI, bugs, speed with a year of data). Found/fixed: unescaped HTML in habit names, negative hours, stale date after midnight, sticky column overlapping tab bar. 1-5 years of data renders in <13 ms.
-7. Round 6 (this): package for GitHub deployment with the uploaded logo, plus this handoff file. Changes for standalone hosting: standard browser download/share instead of the Claude-sandbox download API, PWA manifest + service worker + icons, no auto test data on first run, default accent "Ocean" to match logo.
+7. Round 6: package for GitHub deployment with the uploaded logo, plus this handoff file. Changes for standalone hosting: standard browser download/share instead of the Claude-sandbox download API, PWA manifest + service worker + icons, no auto test data on first run, default accent "Ocean" to match logo.
+8. Final cleanup: removed the Test data section (Load test data / Clear all logs), its seed code, and bumped the service worker to ht-v2.
 
 ## 3. Requirements and rules (keep these)
 - Default habits (in order): 6 AM wake, Exercise, No films, Read book (1 hr), Geetha, No fast food, 4 L water, Minox (morning), Minox (evening), Journal, Learn something new, Sleep by 11:30 pm, YouTube (hrs, Hours type), OTT (hrs, Hours type). "No films" is an interpretation of unclear handwriting ("No F(l/m)") - confirm with the user.
@@ -39,7 +40,7 @@ Status: working trial, tested on Chromium at 390x844. NOT yet verified on real i
 ```json
 {"habits":[{"id":"h0","n":"6 AM wake","e":"⏰","t":"c"}],
  "logs":{"2026-11-01":{"h0":true,"h12":2.5}},
- "set":{"theme":"auto|light|dark","ac":0,"seeded":1}}
+ "set":{"theme":"auto|light|dark","ac":0}}
 ```
 `t` is `c` (Yes/No, value `true`) or `h` (Hours, number 0-24). Dates are local `YYYY-MM-DD`. Custom habit ids are `u<timestamp>`.
 
@@ -52,7 +53,7 @@ Status: working trial, tested on Chromium at 390x844. NOT yet verified on real i
 - Theme: `theme()` applies auto/light/dark and accent via CSS variables (`--ac`, `--a1`, `--g2`); palette array `AC`.
 - Exports: `exportPdf` (jsPDF: grid page + graph page), `exportXlsx` (SheetJS: "Monthly report" sheet with 1/0 cells and SUM formulas, "Summary" sheet; no charts), `dl()` (share sheet on touch devices if files can be shared, else anchor download).
 - Backup: `bkSave()` -> `.json`; `restoreFile(file)`.
-- `seed()` fills last 5 months with random data (Settings -> Load test data). `visibilitychange` refreshes "today" after midnight.
+- `visibilitychange` refreshes "today" after midnight.
 
 ## 7. Deployment
 GitHub Pages from branch (`main`, `/ root`). See README. After edits, bump `VERSION` in `sw.js`.
@@ -120,8 +121,6 @@ S.set=S.set||{theme:'auto',ac:0};
 const save=()=>{try{localStorage.setItem('ht1',JSON.stringify(S))}catch(e){}};
 const AC=[['Ocean','#0b6fd6','#4da3ff','#22d3ee'],['Indigo','#4f46e5','#818cf8','#a78bfa'],['Teal','#0d9488','#2dd4bf','#38bdf8'],['Rose','#e11d48','#fb7185','#f59e0b'],['Amber','#d97706','#fbbf24','#f43f5e']];
 function theme(){const t=S.set.theme,r=document.documentElement,dk=t==='dark'||(t==='auto'&&matchMedia('(prefers-color-scheme:dark)').matches),a=AC[S.set.ac]||AC[0];if(t==='auto')r.removeAttribute('data-theme');else r.dataset.theme=t;r.style.setProperty('--ac',dk?a[2]:a[1]);r.style.setProperty('--a1',a[1]);r.style.setProperty('--g2',a[3])}
-function rnd(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-function seed(){const r=rnd(7),s=new Date(now);s.setMonth(s.getMonth()-5);s.setDate(1);S.logs={};const p={};S.habits.forEach(h=>p[h.id]=.35+r()*.5);for(let d=new Date(s);key(d)<=dayK(3);d.setDate(d.getDate()+1)){const o={};S.habits.forEach(h=>{if(h.t==='c'){if(r()<p[h.id])o[h.id]=true}else if(r()<.85)o[h.id]=Math.round(r()*14)/4});S.logs[key(d)]=o}save()}
 function mp(y,m){const c=chk(),N=new Date(y,m+1,0).getDate();let t=0,n=0;for(let i=1;i<=N;i++){const k=y+'-'+pad(m+1)+'-'+pad(i);if(ago(k)<0)break;n++;c.forEach(h=>{if(get(k,h.id))t++})}return n&&c.length?Math.round(t/(n*c.length)*100):0}
 const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
 async function dl(name,data){const ty=name.endsWith('.pdf')?'application/pdf':name.endsWith('.xlsx')?'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':'application/json',blob=new Blob([data],{type:ty});try{const f=new File([blob],name,{type:ty});if(matchMedia('(pointer:coarse)').matches&&navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});msg('Saved \u2713');return}}catch(e){if(e&&e.name==='AbortError'){msg('Cancelled');return}}try{const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000);msg('Saved \u2713')}catch(e){msg('Could not save the file')}}
@@ -150,8 +149,7 @@ async function restoreFile(f){if(!f)return;try{const o=JSON.parse(await f.text()
 function drawer(){const c=new Date(now.getFullYear(),now.getMonth(),1),f=Object.keys(S.logs).sort()[0];let s=f?new Date(+f.slice(0,4),+f.slice(5,7)-1,1):new Date(c.getFullYear(),c.getMonth()-1,1);if(s>c)s=c;const L=[];for(let d=new Date(c);d>=s;d.setMonth(d.getMonth()-1))L.push(new Date(d));
 return `<div class="ov" data-a="dr" data-v="0"></div><div class="dr"><h2>Habit Tracker</h2><button class="mi ${tab==='today'?'on':''}" data-a="go" data-t="today">✅ Today</button><button class="mi ${tab==='month'?'on':''}" data-a="mo"><span>📅 Months</span><span>${mo?'▴':'▾'}</span></button>${!mo?'':L.map(d=>`<button class="mi ${tab==='month'&&mon.y===d.getFullYear()&&mon.m===d.getMonth()?'on':''}" data-a="go" data-t="month" data-y="${d.getFullYear()}" data-m="${d.getMonth()}"><span>${d.toLocaleDateString('en-IN',{month:'long',year:'numeric'})}</span><span>${mp(d.getFullYear(),d.getMonth())}%</span></button>`).join('')}<div style="height:8px"></div><button class="mi" data-a="go" data-t="manage">📝 Manage habits</button><button class="mi" data-a="go" data-t="set">⚙️ Settings</button></div>`}
 function settings(){const t=S.set.theme;return `${hdr('Settings')}<div class="card"><h2>Appearance</h2><div class="chips">${['auto','light','dark'].map(x=>`<button class="chip ${t===x?'on':''}" data-a="th" data-v="${x}">${{auto:'Auto',light:'☀️ Light',dark:'🌙 Dark'}[x]}</button>`).join('')}</div><div class="sw">${AC.map((a,i)=>`<button class="${S.set.ac===i?'on':''}" style="background:linear-gradient(135deg,${a[1]},${a[3]})" data-a="ac" data-v="${i}" title="${a[0]}"></button>`).join('')}</div></div>
-<div class="card"><h2>Backup &amp; restore</h2><p class="mu">Save all your habits and history as a file, and import it later to restore.</p><div class="row" style="flex-wrap:wrap"><button class="btn" data-a="bk">⬇️ Create backup file</button><label class="btn g" style="display:inline-block">⬆️ Restore from file<input type="file" id="rf" accept=".json,application/json" hidden></label></div><div class="mu" id="msg" style="margin-top:8px"></div></div>
-<div class="card"><h2>Test data</h2><p class="mu">Fills the last 5 months with random entries to preview the app.</p><div class="row" style="flex-wrap:wrap"><button class="btn" data-a="seed">Load test data</button><button class="btn r" data-a="clr">${clr?'Sure? Erase all logs':'Clear all logs'}</button></div></div>`}
+<div class="card"><h2>Backup &amp; restore</h2><p class="mu">Save all your habits and history as a file, and import it later to restore.</p><div class="row" style="flex-wrap:wrap"><button class="btn" data-a="bk">⬇️ Create backup file</button><label class="btn g" style="display:inline-block">⬆️ Restore from file<input type="file" id="rf" accept=".json,application/json" hidden></label></div><div class="mu" id="msg" style="margin-top:8px"></div></div>`}
 const pad=n=>String(n).padStart(2,'0'),key=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 const now=new Date();now.setHours(0,0,0,0);
 const ago=k=>Math.round((now-new Date(k+'T00:00:00'))/864e5),ed=k=>{const a=ago(k);return a>=0&&a<=2};
@@ -184,7 +182,7 @@ return `<div class="nav"><button class="mb" data-a="dr" data-v="1">☰</button><
 <button class="btn" style="width:100%;margin-bottom:12px" data-a="rp" data-v="1">⬇️ Download report</button><div class="card"><h2>Monthly report</h2><div class="tbl"><table><tr><th>Day</th>${th}</tr>${rows}<tr class="t"><td class="d">Σ</td>${tot.map(t=>`<td>${t||0}</td>`).join('')}</tr></table></div><div class="mu" style="margin-top:6px">Shaded rows are editable (today + 2 days back). Tap to mark.</div></div>
 <div class="card"><h2>Days each habit was done</h2>${cl.length?line(cv,cl.map(h=>h.e),Math.max(5,...cv)):'<div class="mu">No habits yet.</div>'}</div>
 <div class="card"><h2>Habits completed per day</h2>${past.length?line(daily,past.map(k=>+k.slice(8)),Math.max(5,c.length)):'<div class="mu">No days yet this month.</div>'}</div>`}
-let del=null,dr=false,clr=false,mo=false,rp=false;
+let del=null,dr=false,mo=false,rp=false;
 function manage(){return `${hdr('Manage habits')}<div class="card"><h2>Add a habit</h2><div class="row" style="flex-wrap:wrap"><input id="ne" value="⭐" style="width:56px;text-align:center"><input id="nn" placeholder="Habit name" style="flex:1;min-width:130px"><select id="nt"><option value="c">Yes / No</option><option value="h">Hours</option></select><button class="btn" data-a="add">Add</button></div></div>
 <div class="card">${S.habits.map(h=>`<div class="h"><span style="font-size:22px">${esc(h.e)}</span><div class="n">${esc(h.n)}<div class="mu">${h.t==='c'?'Yes / No':'Hours'}</div></div><button class="btn ${del===h.id?'r':'g'}" data-a="del" data-id="${h.id}">${del===h.id?'Sure?':'Remove'}</button></div>`).join('')||'<div class="mu">No habits.</div>'}</div>
 <button class="btn g" data-a="reset">Restore default habits</button><p class="mu">Removing a habit hides it from the tracker. Restoring defaults keeps your logged days.</p>`}
@@ -200,7 +198,7 @@ else if(a==='del'){if(del===d.id){S.habits=S.habits.filter(h=>h.id!==d.id);del=n
 else if(a==='dr'){dr=d.v==='1';render()}else if(a==='go'){tab=d.t;if(d.y)mon={y:+d.y,m:+d.m};dr=false;render();scrollTo(0,0)}else if(a==='th'){S.set.theme=d.v;save();theme();render()}else if(a==='ac'){S.set.ac=+d.v;save();theme();render()}
 else if(a==='rp'){rp=d.v==='1';render()}else if(a==='pdf'){exportPdf(mon.y,mon.m)}else if(a==='xls'){exportXlsx(mon.y,mon.m)}else if(a==='bk'){bkSave();return}else if(a==='mo'){mo=!mo;render()}else if(a==='bk0'){const j=JSON.stringify(S),t=document.getElementById('bk');t.value=j;t.select();try{navigator.clipboard.writeText(j).then(()=>msg('Backup copied ✓'),()=>msg('Select the text above and copy it'))}catch(e){msg('Select the text above and copy it')}}
 else if(a==='rs'){try{const o=JSON.parse(document.getElementById('bk').value);if(!Array.isArray(o.habits)||typeof o.logs!=='object')throw 0;S=o;S.set=S.set||{theme:'auto',ac:0};save();theme();render();msg('Restored ✓')}catch(e){msg('That does not look like a valid backup')}}
-else if(a==='seed'){seed();render();msg('Test data loaded ✓')}else if(a==='clr'){if(clr){S.logs={};save();clr=false}else clr=true;render()}
+
 else if(a==='reset'){const ids=S.habits.map(h=>h.id);D.forEach((x,i)=>{if(!ids.includes('h'+i))S.habits.push({id:'h'+i,n:x[0],e:x[1],t:x[2]||'c'})});save();render()}}
 document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(el&&el.tagName!=='INPUT')act(el)});
 document.addEventListener('change',e=>{if(e.target.id==='rf')restoreFile(e.target.files[0]);if(e.target.dataset.a==='hr')set(dayK(sel),e.target.dataset.id,Math.max(0,Math.min(24,parseFloat(e.target.value)||0)))});
@@ -215,7 +213,7 @@ if('serviceWorker' in navigator&&location.protocol.indexOf('http')===0)addEventL
 # Appendix B - sw.js
 ````js
 // Offline cache. Bump VERSION on every release so phones pick up the new files.
-const VERSION = 'ht-v1';
+const VERSION = 'ht-v2';
 const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/favicon-32.png'];
 self.addEventListener('install', e => e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== VERSION).map(x => caches.delete(x)))).then(() => self.clients.claim())));

@@ -26,6 +26,5 @@ Open the link in **Safari**, tap Share, then **Add to Home Screen**.
 - Data is saved in the browser's local storage on each device (no sync). Use **Settings -> Create backup file** regularly. iOS can clear website data for sites unused for a long time; the Home Screen app is safer.
 - PDF/Excel use jsPDF and SheetJS from cdnjs. The first export needs internet; afterwards they are cached for offline use.
 - When you change any file, bump `VERSION` in `sw.js` so phones pick up the update.
-- To start with demo data, use **Settings -> Load test data** (and "Clear all logs" before real use).
 
 See `AI_HANDOFF.md` for the full logic, history and source code.
