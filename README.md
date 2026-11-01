@@ -27,4 +27,4 @@ Open the link in **Safari**, tap Share, then **Add to Home Screen**.
 - PDF/Excel use jsPDF and SheetJS from cdnjs. The first export needs internet; afterwards they are cached for offline use.
 - When you change any file, bump `VERSION` in `sw.js` so phones pick up the update.
 
-See `AI_HANDOFF.md` for the full logic, history and source code.
+See `AI_HANDOFF.md` for the full logic, history and source code. 
